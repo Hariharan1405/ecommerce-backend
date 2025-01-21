@@ -3,10 +3,10 @@ package com.ecommerce.service.product;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
 
-import com.ecommerce.exceptions.ProductNotFoundException;
+import com.ecommerce.exceptions.ResourceNotFoundException;
 import com.ecommerce.model.Category;
 import com.ecommerce.model.Product;
 import com.ecommerce.repository.CategoryRepository;
@@ -15,11 +15,12 @@ import com.ecommerce.request.AddProductRequest;
 import com.ecommerce.request.ProductUpdateRequest;
 
 @Service
-@RequiredArgsConstructor
 public class ProductService implements IProductService{
 	
+	@Autowired
 	private ProductRepository productRepository;
 	
+	@Autowired
 	private CategoryRepository categoryRepository;
 
 	@Override
@@ -47,14 +48,14 @@ public class ProductService implements IProductService{
 	@Override
 	public Product getProductById(Long id) {
 		return productRepository.findById(id)
-				.orElseThrow(() -> new ProductNotFoundException("Product not found!"));
+				.orElseThrow(() -> new ResourceNotFoundException("Product not found!"));
 	}
 
 	@Override
 	public void deleteProductById(Long id) {
 		productRepository.findById(id)
 				.ifPresentOrElse(productRepository::delete, 
-						() -> { throw new ProductNotFoundException("Product not found!");
+						() -> { throw new ResourceNotFoundException("Product not found!");
 								}
 						);
 	}
@@ -64,7 +65,7 @@ public class ProductService implements IProductService{
 		return productRepository.findById(productId)
 				.map(existingProduct -> updateExistingProduct(existingProduct, request))
 				.map(productRepository :: save)
-				.orElseThrow(() -> new ProductNotFoundException("Product not found!"));
+				.orElseThrow(() -> new ResourceNotFoundException("Product not found!"));
 	}
 	
 	private Product updateExistingProduct(Product existingProduct, ProductUpdateRequest request) {
@@ -113,6 +114,12 @@ public class ProductService implements IProductService{
 	@Override
 	public Long countProductsByBrandAndName(String brand, String name) {
 		return productRepository.countByBrandAndName(brand, name);
+	}
+	
+	public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
+		super();
+		this.productRepository = productRepository;
+		this.categoryRepository = categoryRepository;
 	}
 
 }
