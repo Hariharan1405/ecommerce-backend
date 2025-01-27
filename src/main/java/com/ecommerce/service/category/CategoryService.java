@@ -1,11 +1,13 @@
 package com.ecommerce.service.category;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ecommerce.exceptions.ResourceNotFoundException;
+import com.ecommerce.exceptions.AlreadyExistsException;
 import com.ecommerce.model.Category;
 import com.ecommerce.repository.CategoryRepository;
 
@@ -35,12 +37,18 @@ public class CategoryService implements ICategoryService{
 
 	@Override
 	public Category addCategory(Category category) {
-		return null;
+		return Optional.of(category).filter(c -> !categoryRepository.existsByName(c.getName()))
+				.map(categoryRepository :: save)
+				.orElseThrow(() -> new AlreadyExistsException(category.getName() 
+						+ " already exists"));
 	}
 
 	@Override
-	public Category updateCategory(Category category) {
-		return null;
+	public Category updateCategory(Category category, Long id) {
+		return Optional.ofNullable(getCategoryById(id)).map(oldCategory -> {
+			oldCategory.setName(category.getName());
+			return categoryRepository.save(oldCategory);
+		}).orElseThrow(() -> new ResourceNotFoundException("Category " + id + " is updated"));
 	}
 
 	@Override
